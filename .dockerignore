@@ -3,12 +3,13 @@ npm-debug.log
 package-lock.json
 .git
 .gitignore
-README.md
 .env
 .env.example
 .env.local
+.env.backup
 .env.staging
 .env.production
+README.md
 Dockerfile
 .dockerignore
 .nyc_output
