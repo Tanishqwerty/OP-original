@@ -1,0 +1,26 @@
+[phases.setup]
+nixPkgs = ["php82", "php82Packages.composer", "nodejs_18"]
+
+[phases.install]
+cmds = [
+    "composer install --no-dev --optimize-autoloader --no-interaction"
+]
+
+[phases.build]
+cmds = [
+    "npm install",
+    "npm run build",
+    "chmod +x scripts/setup-permissions.sh",
+    "./scripts/setup-permissions.sh",
+    "php artisan config:cache",
+    "php artisan route:cache",
+    "php artisan view:cache"
+]
+
+[start]
+cmd = "php artisan serve --host=0.0.0.0 --port=$PORT"
+
+[variables]
+PORT = "8080"
+NIXPACKS_PHP_ROOT_DIR = "/app/public"
+NIXPACKS_PHP_FALLBACK_PATH = "/index.php" 
