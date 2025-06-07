@@ -12,6 +12,14 @@ echo "DB_HOST: ${DB_HOST:-not set}"
 echo "DB_DATABASE: ${DB_DATABASE:-not set}"
 echo "APP_ENV: ${APP_ENV:-not set}"
 echo "APP_KEY: ${APP_KEY:+set}"
+echo "APP_URL: ${APP_URL:-not set}"
+
+# Set APP_URL to HTTPS if not already set
+if [ -z "$APP_URL" ] || [[ "$APP_URL" == *"http://"* ]]; then
+    echo "=== Setting APP_URL to HTTPS ==="
+    export APP_URL="https://orderprocessing.divinecareindustries.com"
+    echo "APP_URL set to: $APP_URL"
+fi
 
 # Generate app key if not set
 if [ -z "$APP_KEY" ]; then
