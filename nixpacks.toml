@@ -6,7 +6,9 @@ cmds = [
     "composer install --no-dev --optimize-autoloader --no-interaction",
     "chmod +x scripts/setup-permissions.sh",
     "./scripts/setup-permissions.sh",
-    "chmod +x scripts/deploy-setup.sh"
+    "chmod +x scripts/deploy-setup.sh",
+    "chmod +x scripts/start.sh",
+    "chmod +x scripts/health-check.sh"
 ]
 
 [phases.build]
@@ -16,7 +18,7 @@ cmds = [
 ]
 
 [start]
-cmd = "./scripts/deploy-setup.sh && php artisan serve --host=0.0.0.0 --port=$PORT"
+cmd = "bash scripts/start.sh"
 
 [variables]
 PORT = "8080" 

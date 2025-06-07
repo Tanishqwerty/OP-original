@@ -2,69 +2,70 @@
 
 echo "=== Starting deployment setup ==="
 
+# Set working directory
+cd /app
+
 # Debug environment variables
 echo "=== Environment check ==="
-echo "DB_CONNECTION: $DB_CONNECTION"
-echo "DB_HOST: $DB_HOST"
-echo "DB_DATABASE: $DB_DATABASE"
-echo "APP_ENV: $APP_ENV"
-echo "APP_DEBUG: $APP_DEBUG"
+echo "DB_CONNECTION: ${DB_CONNECTION:-not set}"
+echo "DB_HOST: ${DB_HOST:-not set}"
+echo "DB_DATABASE: ${DB_DATABASE:-not set}"
+echo "APP_ENV: ${APP_ENV:-not set}"
+echo "APP_KEY: ${APP_KEY:+set}"
+
+# Generate app key if not set
+if [ -z "$APP_KEY" ]; then
+    echo "=== Generating application key ==="
+    php artisan key:generate --force 2>/dev/null || echo "Key generation failed"
+fi
 
 # Clear any cached config first
 echo "=== Clearing cached configuration ==="
-php artisan config:clear || echo "Config clear failed (this is normal on first run)"
-php artisan cache:clear || echo "Cache clear failed (this is normal on first run)"
+php artisan config:clear 2>/dev/null || true
+php artisan cache:clear 2>/dev/null || true
+php artisan route:clear 2>/dev/null || true
+php artisan view:clear 2>/dev/null || true
 
-# Test database connection with timeout
-echo "=== Testing database connection ==="
-timeout 30 php artisan tinker --execute="
-try {
-    \$pdo = DB::connection()->getPdo();
-    echo 'Database connection successful: ' . DB::connection()->getDatabaseName() . PHP_EOL;
-    echo 'Connection type: ' . DB::connection()->getDriverName() . PHP_EOL;
-    echo 'Host: ' . config('database.connections.' . config('database.default') . '.host') . PHP_EOL;
-} catch (Exception \$e) {
-    echo 'Database connection failed: ' . \$e->getMessage() . PHP_EOL;
-    exit(1);
-}
-" || {
-    echo "Database connection test failed or timed out"
-    echo "Attempting to continue with basic setup..."
-}
+# Wait for database to be ready (if using external database)
+if [ "$DB_CONNECTION" = "mysql" ] && [ -n "$DB_HOST" ]; then
+    echo "=== Waiting for database connection ==="
+    for i in {1..30}; do
+        if php artisan migrate:status 2>/dev/null; then
+            echo "Database connection successful"
+            break
+        fi
+        echo "Waiting for database... attempt $i/30"
+        sleep 2
+    done
+fi
 
-# Run migrations with error handling
+# Run migrations
 echo "=== Running database migrations ==="
-if php artisan migrate --force; then
+if php artisan migrate --force 2>/dev/null; then
     echo "Migrations completed successfully"
 else
-    echo "Migration failed, but continuing..."
+    echo "Migrations failed or already up to date"
 fi
 
-# Run seeders with error handling
+# Run seeders
 echo "=== Running database seeders ==="
-if php artisan db:seed --class=RolesTableSeeder --force; then
+if php artisan db:seed --class=RolesTableSeeder --force 2>/dev/null; then
     echo "Seeders completed successfully"
 else
-    echo "Seeder failed or already run, continuing..."
+    echo "Seeders failed or already run"
 fi
 
-# Clear and cache config
+# Cache configuration
 echo "=== Caching configuration ==="
-php artisan config:cache || echo "Config cache failed"
-
-# Clear and cache routes
-echo "=== Caching routes ==="
-php artisan route:clear || echo "Route clear failed"
-php artisan route:cache || echo "Route cache failed"
-
-# Clear and cache views
-echo "=== Caching views ==="
-php artisan view:clear || echo "View clear failed"
-php artisan view:cache || echo "View cache failed"
+php artisan config:cache 2>/dev/null || echo "Config cache failed"
 
 # Create storage link
 echo "=== Creating storage link ==="
-php artisan storage:link || echo "Storage link already exists or failed to create"
+php artisan storage:link 2>/dev/null || echo "Storage link already exists"
 
-echo "=== Deployment setup completed successfully! ==="
-echo "=== Starting Laravel server ===" 
+# Set proper permissions
+echo "=== Setting permissions ==="
+chmod -R 755 storage bootstrap/cache 2>/dev/null || true
+chown -R www-data:www-data storage bootstrap/cache 2>/dev/null || true
+
+echo "=== Deployment setup completed! ===" 
