@@ -121,13 +121,13 @@ Route::get('/tables/basic', [TablesBasic::class, 'index'])->name('tables-basic')
 
 
 // User Login
-Route::get('/', [UserLogin::class, 'show'])->middleware('auth')->name('/');
+Route::get('/', [UserLogin::class, 'show'])->middleware('auth')->name('home');
 Route::get('/login', [UserLogin::class, 'index'])->middleware('guest')->name('login');
 Route::post('/login', [UserLogin::class, 'login'])->name('login.perform');
 Route::get('/logout', [UserLogin::class, 'logout'])->name('logout');
 
 //Admin Login
-Route::get('/admin', [AdminLogin::class, 'show'])->middleware('auth')->name('/');
+Route::get('/admin', [AdminLogin::class, 'show'])->middleware('auth')->name('admin');
 Route::get('/adminlogin', [AdminLogin::class, 'index'])->middleware('guest')->name('adminlogin');
 Route::post('/adminlogin', [AdminLogin::class, 'login'])->name('adminlogin.perform');
 
