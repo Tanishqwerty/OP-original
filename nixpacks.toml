@@ -5,14 +5,14 @@ nixPkgs = ["php82", "php82Packages.composer", "nodejs_18", "yarn", "nginx"]
 cmds = [
     "composer install --no-dev --optimize-autoloader --no-interaction",
     "chmod +x scripts/setup-permissions.sh",
-    "./scripts/setup-permissions.sh"
+    "./scripts/setup-permissions.sh",
+    "chmod +x scripts/deploy-setup.sh"
 ]
 
 [phases.build]
 cmds = [
     "yarn install",
-    "yarn build",
-    "chmod +x scripts/deploy-setup.sh"
+    "yarn build"
 ]
 
 [phases.deploy]
