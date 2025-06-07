@@ -1,6 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\dashboard\Analytics;
 use App\Http\Controllers\layouts\WithoutMenu;
 use App\Http\Controllers\layouts\WithoutNavbar;
@@ -198,6 +199,38 @@ Route::get('/order', [OrderController::class, 'index'])->name('order.index');
 Route::get('/order', [OrderController::class, 'create'])->name('order.create');
 Route::post('/order', [OrderController::class, 'store'])->name('order.store');
 Route::resource('order', OrderController::class);
+
+// Health check route for debugging
+Route::get('/health', function () {
+    try {
+        // Test database connection
+        DB::connection()->getPdo();
+        $dbStatus = 'Connected';
+        
+        // Check if tables exist
+        $tables = DB::select('SHOW TABLES');
+        $tableCount = count($tables);
+        
+        return response()->json([
+            'status' => 'OK',
+            'database' => $dbStatus,
+            'tables' => $tableCount,
+            'app_env' => config('app.env'),
+            'app_debug' => config('app.debug'),
+            'app_key' => config('app.key') ? 'Set' : 'Missing',
+            'timestamp' => now()
+        ]);
+    } catch (\Exception $e) {
+        return response()->json([
+            'status' => 'ERROR',
+            'error' => $e->getMessage(),
+            'app_env' => config('app.env'),
+            'app_debug' => config('app.debug'),
+            'app_key' => config('app.key') ? 'Set' : 'Missing',
+            'timestamp' => now()
+        ], 500);
+    }
+});
 
 Route::get('/order/{id}/pdf', [OrderController::class, 'generatePDF'])->name('order.pdf');
 // Route to download and generate PDF

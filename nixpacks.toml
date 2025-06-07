@@ -12,9 +12,12 @@ cmds = [
 cmds = [
     "yarn install",
     "yarn build",
-    "php artisan config:cache",
-    "php artisan route:cache",
-    "php artisan view:cache"
+    "chmod +x scripts/deploy-setup.sh"
+]
+
+[phases.deploy]
+cmds = [
+    "./scripts/deploy-setup.sh"
 ]
 
 [start]
