@@ -26,46 +26,76 @@ php artisan cache:clear 2>/dev/null || true
 php artisan route:clear 2>/dev/null || true
 php artisan view:clear 2>/dev/null || true
 
-# Wait for database to be ready (if using external database)
-if [ "$DB_CONNECTION" = "mysql" ] && [ -n "$DB_HOST" ]; then
-    echo "=== Waiting for database connection ==="
-    for i in {1..30}; do
-        if php artisan migrate:status 2>/dev/null; then
-            echo "Database connection successful"
-            break
-        fi
-        echo "Waiting for database... attempt $i/30"
-        sleep 2
-    done
-fi
+# Wait for database connection
+echo "=== Waiting for database connection ==="
+for i in {1..30}; do
+    if php artisan migrate:status 2>/dev/null; then
+        echo "Database connection successful"
+        break
+    fi
+    echo "Waiting for database... ($i/30)"
+    sleep 2
+done
 
-# Run migrations
+# Run migrations with better error handling
 echo "=== Running database migrations ==="
-if php artisan migrate --force 2>/dev/null; then
-    echo "Migrations completed successfully"
-else
-    echo "Migrations failed or already up to date"
-fi
+php artisan migrate --force 2>/dev/null || {
+    echo "Some migrations failed, trying to continue with individual migrations..."
+    
+    # Try to run specific migrations that are most likely to succeed
+    php artisan migrate --path=database/migrations/2025_04_25_063609_create_warehouses_table.php --force 2>/dev/null || echo "Warehouses migration failed"
+    php artisan migrate --path=database/migrations/2025_04_17_085947_create_shades_table.php --force 2>/dev/null || echo "Shades migration failed"
+    php artisan migrate --path=database/migrations/2025_04_17_085957_create_patterns_table.php --force 2>/dev/null || echo "Patterns migration failed"
+    php artisan migrate --path=database/migrations/2025_04_17_090007_create_sizes_table.php --force 2>/dev/null || echo "Sizes migration failed"
+    php artisan migrate --path=database/migrations/2025_04_17_090014_create_embroidery_options_table.php --force 2>/dev/null || echo "Embroidery options migration failed"
+    php artisan migrate --path=database/migrations/2025_04_23_080231_create_products_table.php --force 2>/dev/null || echo "Products migration failed"
+    php artisan migrate --path=database/migrations/2025_04_24_094552_create_orders_table.php --force 2>/dev/null || echo "Orders migration failed"
+    php artisan migrate --path=database/migrations/2025_05_13_070221_create_cities_table.php --force 2>/dev/null || echo "Cities migration failed"
+}
 
-# Run seeders
+# Check if critical tables exist
+echo "=== Checking critical tables ==="
+php artisan tinker --execute="
+try {
+    \App\Models\Warehouse::count();
+    echo 'Warehouses table: OK' . PHP_EOL;
+} catch (Exception \$e) {
+    echo 'Warehouses table: MISSING - ' . \$e->getMessage() . PHP_EOL;
+}
+
+try {
+    \App\Models\Role::count();
+    echo 'Roles table: OK' . PHP_EOL;
+} catch (Exception \$e) {
+    echo 'Roles table: MISSING - ' . \$e->getMessage() . PHP_EOL;
+}
+
+try {
+    \App\Models\User::count();
+    echo 'Users table: OK' . PHP_EOL;
+} catch (Exception \$e) {
+    echo 'Users table: MISSING - ' . \$e->getMessage() . PHP_EOL;
+}
+" 2>/dev/null || echo "Table check failed"
+
+# Run seeders with better error handling
 echo "=== Running database seeders ==="
-if php artisan db:seed --class=RolesTableSeeder --force 2>/dev/null; then
-    echo "Seeders completed successfully"
-else
-    echo "Seeders failed or already run"
-fi
+php artisan db:seed --force 2>/dev/null || {
+    echo "Seeders failed, trying individual seeders..."
+    php artisan db:seed --class=RolesTableSeeder --force 2>/dev/null || echo "Role seeder failed or already run"
+    php artisan db:seed --class=WarehouseSeeder --force 2>/dev/null || echo "Warehouse seeder failed or already run"
+}
 
 # Cache configuration
 echo "=== Caching configuration ==="
-php artisan config:cache 2>/dev/null || echo "Config cache failed"
+php artisan config:cache 2>/dev/null || echo "Config caching failed"
 
 # Create storage link
 echo "=== Creating storage link ==="
 php artisan storage:link 2>/dev/null || echo "Storage link already exists"
 
-# Set proper permissions
+# Set permissions
 echo "=== Setting permissions ==="
-chmod -R 755 storage bootstrap/cache 2>/dev/null || true
-chown -R www-data:www-data storage bootstrap/cache 2>/dev/null || true
+chmod -R 775 storage bootstrap/cache 2>/dev/null || echo "Permission setting failed"
 
 echo "=== Deployment setup completed! ===" 

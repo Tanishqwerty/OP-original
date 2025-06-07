@@ -13,7 +13,13 @@ class UserLogin extends Controller
 {
   public function index()
   {
-    $warehouses = Warehouse::all();
+    try {
+      $warehouses = Warehouse::all();
+    } catch (\Exception $e) {
+      // If warehouses table doesn't exist, create an empty collection
+      $warehouses = collect([]);
+      \Log::warning('Warehouses table not available: ' . $e->getMessage());
+    }
     return view('content.authentications.auth-user-login', compact('warehouses'));
   }
 
