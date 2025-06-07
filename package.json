@@ -87,7 +87,6 @@
     "laravel-vite-plugin": "1.0.1",
     "masonry-layout": "4.2.2",
     "perfect-scrollbar": "1.5.5",
-    "select2": "^4.1.0-rc.0",
-    "sneat-bootstrap-html-laravel-admin-template-free": "file:"
+    "select2": "^4.1.0-rc.0"
   }
 }

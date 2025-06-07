@@ -8,13 +8,9 @@ import { glob } from 'glob';
  * @returns array
  */
 function GetFilesArray(query) {
-  try {
-    return glob.sync(query);
-  } catch (error) {
-    console.warn(`Warning: Could not find files matching pattern: ${query}`);
-    return [];
-  }
+  return glob.sync(query);
 }
+
 /**
  * Js Files
  */
@@ -57,5 +53,6 @@ export default defineConfig({
       ],
       refresh: true
     })
+    // Removed html() plugin as it might not be essential for Laravel
   ]
-});
+}); 
