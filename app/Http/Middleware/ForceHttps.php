@@ -18,7 +18,7 @@ class ForceHttps
     public function handle(Request $request, Closure $next)
     {
         // Only force HTTPS in production
-        if (config('app.env') === 'production') {
+        if (env('APP_ENV') === 'production') {
             // Check if we're behind a proxy that's already handling HTTPS
             $isSecure = $request->isSecure() || 
                        $request->header('X-Forwarded-Proto') === 'https' ||

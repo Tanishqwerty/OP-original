@@ -208,7 +208,7 @@ Route::get('/test-redirect', function () {
             'X-Forwarded-SSL' => request()->header('X-Forwarded-SSL'),
             'Host' => request()->header('Host'),
         ],
-        'env' => config('app.env'),
+        'env' => env('APP_ENV'),
         'timestamp' => now()
     ]);
 })->name('test.redirect');
@@ -228,18 +228,18 @@ Route::get('/health', function () {
             'status' => 'OK',
             'database' => $dbStatus,
             'tables' => $tableCount,
-            'app_env' => config('app.env'),
-            'app_debug' => config('app.debug'),
-            'app_key' => config('app.key') ? 'Set' : 'Missing',
+            'app_env' => env('APP_ENV'),
+            'app_debug' => env('APP_DEBUG'),
+            'app_key' => env('APP_KEY') ? 'Set' : 'Missing',
             'timestamp' => now()
         ]);
     } catch (\Exception $e) {
         return response()->json([
             'status' => 'ERROR',
             'error' => $e->getMessage(),
-            'app_env' => config('app.env'),
-            'app_debug' => config('app.debug'),
-            'app_key' => config('app.key') ? 'Set' : 'Missing',
+            'app_env' => env('APP_ENV'),
+            'app_debug' => env('APP_DEBUG'),
+            'app_key' => env('APP_KEY') ? 'Set' : 'Missing',
             'timestamp' => now()
         ], 500);
     }

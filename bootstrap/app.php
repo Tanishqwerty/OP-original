@@ -16,7 +16,7 @@ return Application::configure(basePath: dirname(__DIR__))
     
     // Add debug middleware first (only in non-production)
     // Remove this after fixing the redirect issue
-    if (config('app.env') !== 'production') {
+    if (env('APP_ENV') !== 'production') {
       $middleware->web(prepend: [
         \App\Http\Middleware\DebugHeaders::class,
       ]);

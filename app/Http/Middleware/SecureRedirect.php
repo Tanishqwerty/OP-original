@@ -18,7 +18,7 @@ class SecureRedirect
     public function handle(Request $request, Closure $next)
     {
         // Only enforce HTTPS in production
-        if (config('app.env') !== 'production') {
+        if (env('APP_ENV') !== 'production') {
             return $next($request);
         }
 

@@ -18,7 +18,7 @@ class DebugHeaders
     public function handle(Request $request, Closure $next)
     {
         // Only debug in non-production environments
-        if (config('app.env') !== 'production') {
+        if (env('APP_ENV') !== 'production') {
             $debugInfo = [
                 'url' => $request->fullUrl(),
                 'method' => $request->method(),
