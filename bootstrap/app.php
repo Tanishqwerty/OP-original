@@ -11,9 +11,21 @@ return Application::configure(basePath: dirname(__DIR__))
     health: '/up',
   )
   ->withMiddleware(function (Middleware $middleware) {
+    // Trust all proxies - important for load balancers/CDNs
     $middleware->trustProxies(at: '*');
+    
+    // Add debug middleware first (only in non-production)
+    // Remove this after fixing the redirect issue
+    if (config('app.env') !== 'production') {
+      $middleware->web(prepend: [
+        \App\Http\Middleware\DebugHeaders::class,
+      ]);
+    }
+    
+    // Add SecureRedirect middleware to web group
+    // This handles HTTPS enforcement with proper proxy detection
     $middleware->web(append: [
-      \App\Http\Middleware\ForceHttps::class,
+      \App\Http\Middleware\SecureRedirect::class,
     ]);
   })
   ->withExceptions(function (Exceptions $exceptions) {

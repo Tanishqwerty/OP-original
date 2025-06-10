@@ -161,9 +161,9 @@ Route::get('/warehouse/dashboard', [WarehouseController::class, 'index'])->name(
 
 Route::middleware(['auth'])->group(function () {
     Route::get('/orders', [OrderController::class, 'index'])->name('orders.index');
-    Route::get('orders/create', [OrderController::class, 'create'])->name('orders.create');
-    Route::post('orders', [OrderController::class, 'store'])->name('orders.store');
-
+    Route::get('/orders/create', [OrderController::class, 'create'])->name('orders.create');
+    Route::post('/orders', [OrderController::class, 'store'])->name('orders.store');
+    Route::resource('orders', OrderController::class);
 });
 
 
@@ -192,13 +192,26 @@ Route::get('products/create', [ProductController::class, 'create'])->name('produ
 Route::post('products', [ProductController::class, 'store'])->name('products.store');
 Route::resource('products', ProductController::class);
 
-Route::resource('items', ItemController::class);
+Route::resource('items', OrderItemController::class);
 Route::get('/items', [OrderItemController::class, 'index']);
 
-Route::get('/order', [OrderController::class, 'index'])->name('order.index');
-Route::get('/order', [OrderController::class, 'create'])->name('order.create');
-Route::post('/order', [OrderController::class, 'store'])->name('order.store');
-Route::resource('order', OrderController::class);
+// Order routes are now handled by the orders resource above
+
+// Test route for debugging redirect issues
+Route::get('/test-redirect', function () {
+    return response()->json([
+        'message' => 'No redirect loop here!',
+        'url' => request()->fullUrl(),
+        'is_secure' => request()->isSecure(),
+        'headers' => [
+            'X-Forwarded-Proto' => request()->header('X-Forwarded-Proto'),
+            'X-Forwarded-SSL' => request()->header('X-Forwarded-SSL'),
+            'Host' => request()->header('Host'),
+        ],
+        'env' => config('app.env'),
+        'timestamp' => now()
+    ]);
+})->name('test.redirect');
 
 // Health check route for debugging
 Route::get('/health', function () {
