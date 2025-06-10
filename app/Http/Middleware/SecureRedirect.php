@@ -28,12 +28,18 @@ class SecureRedirect
         // Check if request is already secure through various methods
         $isSecure = $this->isRequestSecure($request);
 
-        // Only redirect if we're definitely not secure and not in a redirect loop
-        if (!$isSecure && !$this->isRedirectLoop($request)) {
-            return redirect()->secure($request->getRequestUri(), 301);
+        // If we're already secure, don't redirect
+        if ($isSecure) {
+            return $next($request);
         }
 
-        return $next($request);
+        // If we detect we're behind a proxy, assume it's handling HTTPS
+        if ($this->isRedirectLoop($request)) {
+            return $next($request);
+        }
+
+        // Only redirect if we're definitely not secure
+        return redirect()->secure($request->getRequestUri(), 301);
     }
 
     /**
@@ -41,7 +47,7 @@ class SecureRedirect
      */
     private function isRequestSecure(Request $request): bool
     {
-        // Check Laravel's built-in secure detection
+        // Check Laravel's built-in secure detection first
         if ($request->isSecure()) {
             return true;
         }
@@ -75,8 +81,8 @@ class SecureRedirect
      */
     private function isRedirectLoop(Request $request): bool
     {
-        // If we have X-Forwarded-Proto header, we're likely behind a proxy
-        // and should trust it rather than redirect
+        // If we have X-Forwarded-Proto header, we're behind a proxy
+        // Trust the proxy's determination of security
         if ($request->hasHeader('X-Forwarded-Proto')) {
             return true;
         }
