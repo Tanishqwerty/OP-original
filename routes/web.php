@@ -56,6 +56,8 @@ use App\Http\Controllers\ProductController;
 use App\Http\Controllers\OrderItemController;
 use App\Http\Controllers\CustomerController;
 use App\Http\Controllers\CityController;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Http\Request;
 
 
 // layout
@@ -259,3 +261,41 @@ Route::get('/items', [OrderItemController::class, 'index']);
 Route::resource('warehouses', WarehouseController::class);
 
 Route::resource('cities', CityController::class);
+
+// Test routes for debugging (remove after fixing)
+Route::get('/test-auth', function () {
+    $user = Auth::user();
+    
+    if (!$user) {
+        return response()->json([
+            'authenticated' => false,
+            'message' => 'No user authenticated'
+        ]);
+    }
+    
+    return response()->json([
+        'authenticated' => true,
+        'user_id' => $user->id,
+        'email' => $user->email,
+        'role_id' => $user->role_id,
+        'role' => $user->role ? $user->role->name : 'No role',
+        'is_active' => $user->is_active,
+        'session_id' => session()->getId(),
+        'guards' => [
+            'web' => Auth::guard('web')->check(),
+            'default' => Auth::check()
+        ]
+    ]);
+});
+
+Route::get('/test-logout', function (Request $request) {
+    Auth::logout();
+    $request->session()->invalidate();
+    $request->session()->regenerateToken();
+    
+    return response()->json([
+        'message' => 'Logged out successfully',
+        'authenticated' => Auth::check(),
+        'session_id' => session()->getId()
+    ]);
+});

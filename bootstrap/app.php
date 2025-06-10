@@ -14,6 +14,33 @@ return Application::configure(basePath: dirname(__DIR__))
     // Trust all proxies - important for load balancers/CDNs
     $middleware->trustProxies(at: '*');
     
+    // Configure authentication redirects
+    $middleware->redirectGuestsTo(function ($request) {
+        // Check if the request is for admin routes
+        if ($request->is('admin*') || $request->is('dashboard*')) {
+            return route('adminlogin');
+        }
+        
+        // Default to user login
+        return route('login');
+    });
+    
+    $middleware->redirectUsersTo(function ($request) {
+        $user = $request->user();
+        
+        if ($user && isset($user->role)) {
+            $role = $user->role->name ?? null;
+            
+            if ($role === 'admin') {
+                return '/dashboard';
+            } else {
+                return '/user/dashboard';
+            }
+        }
+        
+        return '/dashboard';
+    });
+    
     // Add debug middleware first (only in non-production)
     // Remove this after fixing the redirect issue
     if (env('APP_ENV') !== 'production') {
